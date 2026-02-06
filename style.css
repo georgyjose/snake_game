@@ -1,0 +1,138 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1a1a2e;
+  color: #eee;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.container {
+  text-align: center;
+  position: relative;
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: #00d97e;
+  text-transform: uppercase;
+  letter-spacing: 0.3rem;
+}
+
+.score-board {
+  display: flex;
+  justify-content: space-between;
+  max-width: 400px;
+  margin: 0 auto 0.75rem;
+  font-size: 1.1rem;
+}
+
+canvas {
+  display: block;
+  margin: 0 auto;
+  background: #16213e;
+  border: 2px solid #0f3460;
+  border-radius: 4px;
+}
+
+/* Overlay */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  z-index: 10;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.overlay-content {
+  text-align: center;
+}
+
+.overlay-content h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #00d97e;
+}
+
+.overlay-content p {
+  margin-bottom: 1rem;
+  color: #ccc;
+}
+
+#start-btn {
+  padding: 0.6rem 2rem;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 6px;
+  background: #00d97e;
+  color: #1a1a2e;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#start-btn:hover {
+  background: #00b86b;
+}
+
+/* Mobile controls */
+.controls {
+  margin-top: 1rem;
+  display: none;
+}
+
+.controls-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.ctrl-btn {
+  width: 60px;
+  height: 60px;
+  font-size: 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: #0f3460;
+  color: #eee;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.ctrl-btn:active {
+  background: #00d97e;
+  color: #1a1a2e;
+}
+
+@media (pointer: coarse) {
+  .controls {
+    display: block;
+  }
+}
+
+@media (max-width: 440px) {
+  canvas {
+    width: 95vw;
+    height: 95vw;
+  }
+}

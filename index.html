@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Snake</h1>
+    <div class="score-board">
+      <span>Score: <strong id="score">0</strong></span>
+      <span>High Score: <strong id="high-score">0</strong></span>
+    </div>
+    <canvas id="game" width="400" height="400"></canvas>
+    <div id="overlay" class="overlay">
+      <div class="overlay-content">
+        <h2 id="overlay-title">Snake</h2>
+        <p id="overlay-msg">Use arrow keys or WASD to move</p>
+        <button id="start-btn">Play</button>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="controls-row">
+        <button class="ctrl-btn" data-dir="up">&#9650;</button>
+      </div>
+      <div class="controls-row">
+        <button class="ctrl-btn" data-dir="left">&#9664;</button>
+        <button class="ctrl-btn" data-dir="down">&#9660;</button>
+        <button class="ctrl-btn" data-dir="right">&#9654;</button>
+      </div>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
