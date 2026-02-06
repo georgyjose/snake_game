@@ -180,6 +180,22 @@ canvas {
 @media (pointer: coarse) {
   .controls {
     display: block;
+    margin-top: 0.5rem;
+  }
+
+  .ctrl-btn {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .score-board {
+    margin-bottom: 0.5rem;
   }
 }
 
@@ -192,5 +208,14 @@ canvas {
   .score-board {
     max-width: 95vw;
     font-size: 0.85rem;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 440px) {
+  canvas {
+    width: min(95vw, calc(100vh - 290px));
+    height: min(95vw, calc(100vh - 290px));
+    width: min(95vw, calc(100dvh - 290px));
+    height: min(95vw, calc(100dvh - 290px));
   }
 }

@@ -263,6 +263,7 @@
       const theme = getTheme();
       spawnParticles(food.x, food.y, theme.food, 10);
       soundEat(combo);
+      if (navigator.vibrate) navigator.vibrate(10);
 
       // Level up
       if (foodEaten % FOODS_PER_LEVEL === 0) {
@@ -539,6 +540,7 @@
     running = false;
     cancelAnimationFrame(loop);
     soundDeath();
+    if (navigator.vibrate) navigator.vibrate(100);
 
     if (score > highScore) {
       highScore = score;
@@ -599,6 +601,7 @@
       const newDir = dirMap[btn.dataset.dir];
       if (newDir.x + dir.x === 0 && newDir.y + dir.y === 0) return;
       nextDir = newDir;
+      if (navigator.vibrate) navigator.vibrate(20);
     });
   });
 
