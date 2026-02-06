@@ -3,6 +3,7 @@
   const ctx = canvas.getContext('2d');
   const scoreEl = document.getElementById('score');
   const highScoreEl = document.getElementById('high-score');
+  const levelEl = document.getElementById('level');
   const overlay = document.getElementById('overlay');
   const overlayTitle = document.getElementById('overlay-title');
   const overlayMsg = document.getElementById('overlay-msg');
@@ -10,14 +11,24 @@
 
   const GRID = 20;
   const TILE = canvas.width / GRID;
+  const FOODS_PER_LEVEL = 10;
+  const BASE_SPEED = 150;
+  const SPEED_DROP_PER_LEVEL = 15;
+  const MIN_SPEED = 50;
 
-  let snake, dir, nextDir, food, score, highScore, speed, loop;
+  let snake, dir, nextDir, food, score, highScore, speed, loop, level, foodEaten, running;
 
   // Load high score from localStorage
   highScore = parseInt(localStorage.getItem('snake-high-score')) || 0;
   highScoreEl.textContent = highScore;
+  running = false;
+
+  function getSpeedForLevel(lvl) {
+    return Math.max(MIN_SPEED, BASE_SPEED - (lvl - 1) * SPEED_DROP_PER_LEVEL);
+  }
 
   function init() {
+    clearTimeout(loop);
     snake = [
       { x: 10, y: 10 },
       { x: 9, y: 10 },
@@ -26,8 +37,12 @@
     dir = { x: 1, y: 0 };
     nextDir = { x: 1, y: 0 };
     score = 0;
-    speed = 150;
+    level = 1;
+    foodEaten = 0;
+    speed = getSpeedForLevel(level);
+    running = false;
     scoreEl.textContent = score;
+    levelEl.textContent = level;
     placeFood();
   }
 
@@ -37,7 +52,6 @@
         x: Math.floor(Math.random() * GRID),
         y: Math.floor(Math.random() * GRID),
       };
-      // Make sure food doesn't land on the snake
       if (!snake.some(s => s.x === food.x && s.y === food.y)) break;
     }
   }
@@ -52,22 +66,31 @@
 
     // Wall collision
     if (head.x < 0 || head.x >= GRID || head.y < 0 || head.y >= GRID) {
-      return gameOver();
+      gameOver();
+      return;
     }
 
     // Self collision
     if (snake.some(s => s.x === head.x && s.y === head.y)) {
-      return gameOver();
+      gameOver();
+      return;
     }
 
     snake.unshift(head);
 
     if (head.x === food.x && head.y === food.y) {
       score += 10;
+      foodEaten++;
       scoreEl.textContent = score;
+
+      // Level up every FOODS_PER_LEVEL items
+      if (foodEaten % FOODS_PER_LEVEL === 0) {
+        level++;
+        levelEl.textContent = level;
+        speed = getSpeedForLevel(level);
+      }
+
       placeFood();
-      // Speed up slightly
-      if (speed > 60) speed -= 2;
     } else {
       snake.pop();
     }
@@ -123,22 +146,50 @@
         ctx.fill();
       }
     });
+
+    // Draw level-up flash
+    if (levelFlash > 0) {
+      ctx.fillStyle = `rgba(0, 217, 126, ${levelFlash})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 32px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`Level ${level}`, canvas.width / 2, canvas.height / 2);
+      levelFlash -= 0.02;
+    }
   }
 
+  let levelFlash = 0;
+  let prevLevel = 1;
+
   function tick() {
+    if (!running) return;
+
+    // Detect level change for flash effect
+    if (level !== prevLevel) {
+      levelFlash = 0.6;
+      prevLevel = level;
+    }
+
     update();
+    if (!running) return; // gameOver was called inside update
     draw();
     loop = setTimeout(tick, speed);
   }
 
   function start() {
     init();
+    running = true;
+    prevLevel = 1;
+    levelFlash = 0;
     overlay.classList.add('hidden');
     draw();
     loop = setTimeout(tick, speed);
   }
 
   function gameOver() {
+    running = false;
     clearTimeout(loop);
     if (score > highScore) {
       highScore = score;
@@ -146,7 +197,7 @@
       highScoreEl.textContent = highScore;
     }
     overlayTitle.textContent = 'Game Over';
-    overlayMsg.textContent = `Score: ${score}`;
+    overlayMsg.textContent = `Score: ${score}  |  Level: ${level}`;
     startBtn.textContent = 'Play Again';
     overlay.classList.remove('hidden');
   }
