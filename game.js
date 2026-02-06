@@ -14,9 +14,9 @@
   const GRID = 20;
   const TILE = canvas.width / GRID;
   const FOODS_PER_LEVEL = 10;
-  const BASE_SPEED = 300;
-  const SPEED_DROP_PER_LEVEL = 30;
-  const MIN_SPEED = 100;
+  const BASE_SPEED = 150;
+  const SPEED_DROP_PER_LEVEL = 15;
+  const MIN_SPEED = 50;
   const COMBO_WINDOW = 2000; // ms to keep combo alive
   const MAX_COMBO = 5;
 
@@ -216,11 +216,11 @@
       y: snake[0].y + dir.y,
     };
 
-    // Wall collision
-    if (head.x < 0 || head.x >= GRID || head.y < 0 || head.y >= GRID) {
-      gameOver();
-      return;
-    }
+    // Wrap around walls
+    if (head.x < 0) head.x = GRID - 1;
+    else if (head.x >= GRID) head.x = 0;
+    if (head.y < 0) head.y = GRID - 1;
+    else if (head.y >= GRID) head.y = 0;
 
     // Self collision
     if (snake.some(s => s.x === head.x && s.y === head.y)) {
@@ -340,35 +340,93 @@
     );
     ctx.fill();
 
-    // Snake (interpolated)
+    // Snake (interpolated with wrap-around support)
     const len = snake.length;
     for (let i = 0; i < len; i++) {
       const cur = snake[i];
       const prev = prevSnake[i] || cur;
 
-      // Lerp position
-      const drawX = (prev.x + (cur.x - prev.x) * t) * TILE;
-      const drawY = (prev.y + (cur.y - prev.y) * t) * TILE;
+      let dx = cur.x - prev.x;
+      let dy = cur.y - prev.y;
+
+      // Detect wrap-around: a jump of more than 1 tile means wrapping
+      const wrappedX = Math.abs(dx) > 1;
+      const wrappedY = Math.abs(dy) > 1;
 
       const ratio = 1 - i / len;
-      ctx.fillStyle = `hsl(${theme.snakeHue}, 100%, ${30 + ratio * 30}%)`;
-      ctx.fillRect(drawX + 1, drawY + 1, TILE - 2, TILE - 2);
+      const color = `hsl(${theme.snakeHue}, 100%, ${30 + ratio * 30}%)`;
+      ctx.fillStyle = color;
 
-      // Eyes on head
-      if (i === 0) {
-        ctx.fillStyle = '#fff';
-        const eyeSize = 3;
-        const offsetX = dir.x !== 0 ? dir.x * 3 : -3;
-        const offsetY = dir.y !== 0 ? dir.y * 3 : -3;
-        const cx = drawX + TILE / 2;
-        const cy = drawY + TILE / 2;
-        ctx.beginPath();
-        ctx.arc(cx + offsetX, cy + (dir.x !== 0 ? -3 : 0), eyeSize, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(cx + (dir.y !== 0 ? 3 : 0), cy + offsetY, eyeSize, 0, Math.PI * 2);
-        ctx.fill();
+      if (wrappedX || wrappedY) {
+        // Draw two copies: one exiting, one entering
+        // Exiting side: prev position moving toward the edge
+        // Entering side: cur position coming from the opposite edge
+        let exitX, exitY, enterX, enterY;
+
+        if (wrappedX) {
+          // Moving right wrapped: prev.x is near GRID-1, cur.x is near 0 (dx < 0 means wrapped right)
+          // Moving left wrapped: prev.x is near 0, cur.x is near GRID-1 (dx > 0 means wrapped left)
+          if (dx < 0) {
+            // Wrapped right: exiting right edge, entering left edge
+            exitX = (prev.x + t) * TILE;
+            enterX = (cur.x - 1 + t) * TILE;
+          } else {
+            // Wrapped left: exiting left edge, entering right edge
+            exitX = (prev.x - t) * TILE;
+            enterX = (cur.x + 1 - t) * TILE;
+          }
+        } else {
+          exitX = (prev.x + dx * t) * TILE;
+          enterX = exitX;
+        }
+
+        if (wrappedY) {
+          if (dy < 0) {
+            exitY = (prev.y + t) * TILE;
+            enterY = (cur.y - 1 + t) * TILE;
+          } else {
+            exitY = (prev.y - t) * TILE;
+            enterY = (cur.y + 1 - t) * TILE;
+          }
+        } else {
+          exitY = (prev.y + dy * t) * TILE;
+          enterY = exitY;
+        }
+
+        // Draw exiting segment (clipped to canvas)
+        ctx.fillRect(exitX + 1, exitY + 1, TILE - 2, TILE - 2);
+        // Draw entering segment
+        ctx.fillRect(enterX + 1, enterY + 1, TILE - 2, TILE - 2);
+
+        // Eyes on entering copy if head
+        if (i === 0) {
+          drawEyes(enterX, enterY);
+        }
+      } else {
+        // Normal interpolation
+        const drawX = (prev.x + dx * t) * TILE;
+        const drawY = (prev.y + dy * t) * TILE;
+        ctx.fillRect(drawX + 1, drawY + 1, TILE - 2, TILE - 2);
+
+        if (i === 0) {
+          drawEyes(drawX, drawY);
+        }
       }
+    }
+
+    function drawEyes(drawX, drawY) {
+      ctx.fillStyle = '#fff';
+      const eyeSize = 3;
+      const offsetX = dir.x !== 0 ? dir.x * 3 : -3;
+      const offsetY = dir.y !== 0 ? dir.y * 3 : -3;
+      const cx = drawX + TILE / 2;
+      const cy = drawY + TILE / 2;
+      ctx.beginPath();
+      ctx.arc(cx + offsetX, cy + (dir.x !== 0 ? -3 : 0), eyeSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx + (dir.y !== 0 ? 3 : 0), cy + offsetY, eyeSize, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     // Particles
