@@ -14,9 +14,9 @@
   const GRID = 20;
   const TILE = canvas.width / GRID;
   const FOODS_PER_LEVEL = 10;
-  const BASE_SPEED = 150;
-  const SPEED_DROP_PER_LEVEL = 15;
-  const MIN_SPEED = 50;
+  const BASE_SPEED = 300;
+  const SPEED_DROP_PER_LEVEL = 30;
+  const MIN_SPEED = 100;
   const COMBO_WINDOW = 2000; // ms to keep combo alive
   const MAX_COMBO = 5;
 
