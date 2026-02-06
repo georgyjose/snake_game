@@ -159,9 +159,9 @@ canvas {
 }
 
 .ctrl-btn {
-  width: 60px;
-  height: 60px;
-  font-size: 1.5rem;
+  width: 110px;
+  height: 110px;
+  font-size: 2.5rem;
   border: none;
   border-radius: 8px;
   background: #0f3460;

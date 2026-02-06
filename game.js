@@ -397,6 +397,9 @@
       ctx.globalAlpha = 1;
     }
 
+    // Gyro tilt indicator
+    drawGyroIndicator();
+
     // Canvas border color matches theme
     canvas.style.borderColor = theme.border;
   }
@@ -459,6 +462,7 @@
     draw(0);
     lastTime = 0;
     accumulated = 0;
+    if (gyroEnabled) recalibrateGyro();
     loop = requestAnimationFrame(gameLoop);
   }
 
@@ -578,7 +582,14 @@
   const gyroBtn = document.getElementById('gyro-btn');
   let gyroEnabled = false;
   let gyroReceived = false;
-  const GYRO_DEAD_ZONE = 12;
+  const GYRO_DEAD_ZONE = 20;       // degrees from neutral before registering
+  const GYRO_THROTTLE = 180;       // ms between direction changes
+  let gyroBetaOffset = 0;          // calibrated neutral beta
+  let gyroGammaOffset = 0;         // calibrated neutral gamma
+  let gyroCalibrated = false;
+  let gyroLastChangeTime = 0;
+  let gyroTiltX = 0;               // current relative tilt for indicator
+  let gyroTiltY = 0;
 
   // Show button on touch-capable devices
   if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
@@ -586,41 +597,106 @@
   }
 
   function handleOrientation(e) {
+    if (e.beta === null || e.gamma === null) return;
     gyroReceived = true;
+
+    // Auto-calibrate on first reading — whatever angle the user holds becomes neutral
+    if (!gyroCalibrated) {
+      gyroBetaOffset = e.beta;
+      gyroGammaOffset = e.gamma;
+      gyroCalibrated = true;
+      return;
+    }
+
+    // Relative tilt from calibrated neutral
+    const relBeta = e.beta - gyroBetaOffset;
+    const relGamma = e.gamma - gyroGammaOffset;
+
+    // Store for tilt indicator (clamped to -45..45 for display)
+    gyroTiltX = Math.max(-45, Math.min(45, relGamma));
+    gyroTiltY = Math.max(-45, Math.min(45, relBeta));
+
     if (!gyroEnabled || paused || !running) return;
 
-    const beta = e.beta;
-    const gamma = e.gamma;
+    const absBeta = Math.abs(relBeta);
+    const absGamma = Math.abs(relGamma);
 
-    if (beta === null || gamma === null) return;
-
-    const absBeta = Math.abs(beta);
-    const absGamma = Math.abs(gamma);
-
+    // Must exceed dead zone
     if (absBeta < GYRO_DEAD_ZONE && absGamma < GYRO_DEAD_ZONE) return;
+
+    // Throttle direction changes to prevent jitter
+    const now = Date.now();
+    if (now - gyroLastChangeTime < GYRO_THROTTLE) return;
 
     let newDir;
     if (absGamma > absBeta) {
-      newDir = gamma > 0 ? { x: 1, y: 0 } : { x: -1, y: 0 };
+      newDir = relGamma > 0 ? { x: 1, y: 0 } : { x: -1, y: 0 };
     } else {
-      newDir = beta > 0 ? { x: 0, y: 1 } : { x: 0, y: -1 };
+      newDir = relBeta > 0 ? { x: 0, y: 1 } : { x: 0, y: -1 };
     }
 
+    // Prevent reversing
     if (newDir.x + dir.x === 0 && newDir.y + dir.y === 0) return;
 
-    nextDir = newDir;
+    // Only update if direction actually changed
+    if (newDir.x !== nextDir.x || newDir.y !== nextDir.y) {
+      nextDir = newDir;
+      gyroLastChangeTime = now;
+    }
+  }
+
+  // Draw tilt indicator on canvas when gyro is active
+  function drawGyroIndicator() {
+    if (!gyroEnabled) return;
+
+    const cx = canvas.width - 25;
+    const cy = 25;
+    const radius = 18;
+
+    // Outer ring
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Dead zone ring
+    const dzRadius = radius * (GYRO_DEAD_ZONE / 45);
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, dzRadius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Tilt dot
+    const dotX = cx + (gyroTiltX / 45) * radius;
+    const dotY = cy + (gyroTiltY / 45) * radius;
+    const inDeadZone = Math.abs(gyroTiltX) < GYRO_DEAD_ZONE && Math.abs(gyroTiltY) < GYRO_DEAD_ZONE;
+    ctx.fillStyle = inDeadZone ? 'rgba(255,255,255,0.5)' : '#00d97e';
+    ctx.beginPath();
+    ctx.arc(dotX, dotY, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.lineWidth = 1;
   }
 
   function disableGyro() {
     gyroEnabled = false;
+    gyroCalibrated = false;
     window.removeEventListener('deviceorientation', handleOrientation);
     gyroBtn.textContent = 'Gyro: Off';
     gyroBtn.classList.remove('active');
   }
 
+  function recalibrateGyro() {
+    gyroCalibrated = false;
+  }
+
   function enableGyro() {
     gyroEnabled = true;
     gyroReceived = false;
+    gyroCalibrated = false;
+    gyroTiltX = 0;
+    gyroTiltY = 0;
     window.addEventListener('deviceorientation', handleOrientation);
     gyroBtn.textContent = 'Gyro: On';
     gyroBtn.classList.add('active');
