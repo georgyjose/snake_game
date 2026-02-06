@@ -17,7 +17,6 @@ body {
 
 .container {
   text-align: center;
-  position: relative;
 }
 
 h1 {
@@ -33,12 +32,20 @@ h1 {
   justify-content: space-between;
   max-width: 400px;
   margin: 0 auto 0.75rem;
-  font-size: 1.1rem;
+  font-size: 1rem;
+}
+
+#combo-wrap strong {
+  color: #ffdd57;
+}
+
+.canvas-wrap {
+  position: relative;
+  display: inline-block;
 }
 
 canvas {
   display: block;
-  margin: 0 auto;
   background: #16213e;
   border: 2px solid #0f3460;
   border-radius: 4px;
@@ -76,6 +83,7 @@ canvas {
 .overlay-content p {
   margin-bottom: 1rem;
   color: #ccc;
+  line-height: 1.5;
 }
 
 #start-btn {
@@ -92,6 +100,50 @@ canvas {
 
 #start-btn:hover {
   background: #00b86b;
+}
+
+/* Action bar */
+.action-bar {
+  max-width: 400px;
+  margin: 0.5rem auto 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.action-bar .hidden {
+  display: none;
+}
+
+#pause-btn {
+  padding: 0.4rem 1.5rem;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 6px;
+  background: #0f3460;
+  color: #eee;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#pause-btn:hover, #gyro-btn:hover {
+  background: #1a4a80;
+}
+
+#gyro-btn {
+  padding: 0.4rem 1.5rem;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 6px;
+  background: #0f3460;
+  color: #eee;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#gyro-btn.active {
+  background: #00d97e;
+  color: #1a1a2e;
 }
 
 /* Mobile controls */
@@ -135,5 +187,10 @@ canvas {
   canvas {
     width: 95vw;
     height: 95vw;
+  }
+
+  .score-board {
+    max-width: 95vw;
+    font-size: 0.85rem;
   }
 }
