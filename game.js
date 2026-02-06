@@ -256,6 +256,7 @@
       if (score > highScore) {
         highScore = score;
         highScoreEl.textContent = highScore;
+        localStorage.setItem('snake-high-score', highScore);
       }
 
       // Particles + sound
